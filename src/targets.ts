@@ -1,3 +1,4 @@
+import config from './config'
 import { parse } from 'yaml'
 import { readFile } from 'fs/promises'
 
@@ -5,15 +6,12 @@ export type Target = {
   url: string
 }
 
-const targetsData = process.env.TARGETS_DATA || ''
-const targetsFile = process.env.TARGETS_FILE || 'targets.yaml'
-
 export default async (): Promise<Target[]> => {
   const targets: Target[] = []
   let result: unknown = undefined
-  if (targetsData) result = parse(targetsData, {})
+  if (config.targets.data) result = parse(config.targets.data, {})
   else {
-    const data = await readFile(targetsFile)
+    const data = await readFile(config.targets.file)
     result = parse(data.toString())
   }
   if (!(result instanceof Array)) throw new Error('invalid targets data')
