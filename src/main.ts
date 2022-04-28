@@ -3,9 +3,10 @@ import getTargets from './targets'
 import listen from './api'
 import { Log, LogLevelFromString, StdioAdaptor } from '@edge/log'
 import { clearInterval, setInterval } from 'timers'
+import createMetrics, { Metrics } from './metrics'
 import request, { Response } from './request'
 
-const doRequests = async (log?: Log): Promise<void> => {
+const doRequests = async (metrics: Metrics, log?: Log): Promise<void> => {
   const targets = await getTargets()
   const doRequest = request(log)
 
@@ -32,10 +33,19 @@ const doRequests = async (log?: Log): Promise<void> => {
     }
 
     log?.info('sending requests', { num: requests.length })
-    const results = await Promise.allSettled(requests.map(r => r()))
-    const ok = results.filter(r => r.status === 'fulfilled' )
-    log?.info('completed requests', { num: ok.length, errors: requests.length - ok.length })
-    ok.forEach(r => console.log(r))
+    const completed = await Promise.allSettled(requests.map(async r => {
+      const { headers, result } = await r()
+      const labels = [headers.contentType, headers.cache]
+      metrics.contentLength.labels(...labels).inc(parseInt(headers.contentLength))
+      metrics.download.labels(...labels).inc(result.download - result.ttfb)
+      metrics.requests.labels(...labels).inc()
+      metrics.ttfb.labels(...labels).inc(result.ttfb - result.start)
+    }))
+    const errors = completed.filter(r => r.status === 'rejected')
+    log?.info('completed requests', { num: completed.length - errors.length, errors: errors.length })
+    errors.forEach(r => {
+      log?.warn('failed to complete request', { reason: (r as PromiseRejectedResult).reason })
+    })
 
     locked = false
   }
@@ -49,11 +59,13 @@ const main = async () => {
   const log = new Log(adaptors)
   log.setLogLevel(LogLevelFromString(config.log.level))
 
+  const metrics = createMetrics()
+
   log.info('starting')
   try {
     await Promise.all([
-      doRequests(log.extend('request')),
-      listen(log.extend('http'))
+      doRequests(metrics, log.extend('request')),
+      listen(metrics, log.extend('http'))
     ])
   }
   catch (err) {

@@ -36,7 +36,7 @@ const request = (log?: Log) => (target: Target) => new Promise<Response>((resolv
         result: timer.complete(),
         headers: {
           cache: typeof res.headers['x-cache'] === 'string' && res.headers['x-cache'] || '',
-          contentLength: res.headers['content-length'] || '',
+          contentLength: res.headers['content-length'] || '0',
           contentType: res.headers['content-type'] || ''
         }
       })
