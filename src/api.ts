@@ -1,10 +1,11 @@
 import { Log } from '@edge/log'
+import { Metrics } from './metrics'
 import config from './config'
 import http from 'http'
 
-const listen = async (log?: Log) => new Promise((_, reject) => {
+const listen = async (metrics: Metrics, log?: Log) => new Promise((_, reject) => {
   const server = http.createServer()
-  server.on('request', receive)
+  server.on('request', receive(metrics))
 
   server.on('error', err => {
     log?.error(err)
@@ -16,23 +17,24 @@ const listen = async (log?: Log) => new Promise((_, reject) => {
   })
 })
 
-const metrics: http.RequestListener = (req, res) => {
-  send(res, 200, { message: 'metrics!' })
+const printMetrics = async (metrics: Metrics, res: http.ServerResponse) => {
+  res.writeHead(200)
+  res.end(await metrics.register.metrics())
 }
 
-const receive: http.RequestListener = (req, res) => {
+const receive = (metrics: Metrics): http.RequestListener => (req, res) => {
   if (config.http.token) {
     const auth = req.headers.authorization
     const token = auth && (auth.startsWith('Bearer ') || auth.startsWith('bearer ')) && auth.slice(7)
-    if (token !== config.http.token) return send(res, 403, { error: 'forbidden' })
+    if (token !== config.http.token) return json(res, 403, { error: 'forbidden' })
   }
 
-  if (req.url === '/') return metrics(req, res)
+  if (req.url === '/') return printMetrics(metrics, res)
 
-  send(res, 404, { error: 'page not found' })
+  json(res, 404, { error: 'page not found' })
 }
 
-const send = (res: http.ServerResponse, code: number, data?: Record<string, unknown>) => {
+const json = (res: http.ServerResponse, code: number, data?: Record<string, unknown>) => {
   res.writeHead(code, data && { 'Content-Type': 'application/json' })
   res.end(data && JSON.stringify(data))
 }
