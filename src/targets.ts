@@ -6,7 +6,7 @@ export type Target = {
   url: string
 }
 
-export default async (): Promise<Target[]> => {
+const getTargets = async (): Promise<Target[]> => {
   const targets: Target[] = []
   let result: unknown = undefined
   if (config.targets.data) result = parse(config.targets.data, {})
@@ -21,3 +21,5 @@ export default async (): Promise<Target[]> => {
   })
   return targets
 }
+
+export default getTargets
