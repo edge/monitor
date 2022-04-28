@@ -9,6 +9,13 @@ export default {
   delay: parseInt(process.env.DELAY || '250'),
   /** Frequency of request cycle (or, delay between ticks) (seconds) */
   frequency: parseInt(process.env.FREQUENCY || '15') * Second,
+  /** HTTP server configuration */
+  http: {
+    /** HTTP listen port */
+    port: parseInt(process.env.HTTP_PORT || '8456'),
+    /** HTTP bearer authorization token */
+    token: process.env.HTTP_TOKEN
+  },
   /** Logging configuration */
   log: {
     /** Log level (error, warn, info, or debug) */
