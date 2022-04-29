@@ -22,24 +22,43 @@ const request = (log?: Log) => (target: Target) => new Promise<Response>((resolv
   const req = proto.get(target.url)
 
   req.on('response', res => {
-    res.on('readable', () => {
+    res.once('readable', () => {
       timer.ttfb()
-      log?.debug('readable', target)
+      log?.debug('ttfb', target)
+    })
+
+    res.on('readable', () => {
       while (res.read() !== null);
     })
 
     res.on('end', () => {
       timer.download()
-      log?.debug('end', target)
+      const result = timer.complete()
+      log?.debug('download', { target, delta: result.delta })
       resolve({
         target,
-        result: timer.complete(),
+        result,
         headers: {
           cache: typeof res.headers['x-cache'] === 'string' && res.headers['x-cache'] || '',
           contentLength: res.headers['content-length'] || '0',
           contentType: res.headers['content-type'] || ''
         }
       })
+    })
+  })
+
+  req.on('socket', sock => {
+    sock.on('lookup', () => {
+      timer.dns()
+      log?.debug('dns', target)
+    })
+    sock.on('connect', () => {
+      timer.tcp()
+      log?.debug('connect', target)
+    })
+    sock.on('secureConnect', () => {
+      timer.ssl()
+      log?.debug('ssl', target)
     })
   })
 
