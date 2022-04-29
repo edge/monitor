@@ -1,8 +1,23 @@
+// Copyright (C) 2022 Edge Network Technologies Limited
+// Use of this source code is governed by a GNU GPL-style license
+// that can be found in the LICENSE.md file. All rights reserved.
+
 /** Placeholder time value, to disambiguate unmeasured from measured values. */
 const DEFAULT_TIME = BigInt(-1)
+
 /** Relative to nanoseconds. `1e6` provides millisecond precision when calculating time elapsed */
 const SCALE = 1e6
 
+/**
+ * Timed events relating to an HTTP GET request.
+ * These should occur in the following order:
+ *   1. `start` (always zero)
+ *   2. `dns`
+ *   3. `tcp`
+ *   4. `ssl` (if HTTPS)
+ *   5. `ttfb`
+ *   6. `download`
+ */
 export type Event =
   'dns' |
   'download' |
@@ -11,6 +26,7 @@ export type Event =
   'tcp' |
   'ttfb'
 
+/** Timed events as a usable array. */
 export const Events: Event[] = [
   'dns',
   'download',
@@ -20,12 +36,19 @@ export const Events: Event[] = [
   'ttfb'
 ]
 
+/** Timing result created when a timer is completed. See `Timer.complete()` */
 export type Result = {
   abs: Record<Event, bigint>
   delta: Record<Event, number>
   total: Record<Event, number>
 }
 
+/**
+ * A timer provides a simple interface to record HTTP request events as it progresses.
+ * Each `Event` function captures the time in nanoseconds.
+ * Calling an `Event` function more than once has no effect.
+ * Calling `complete()` summarises the timings into a `Result` used for metrics.
+ */
 export type Timer = Record<Event, () => void> & { complete: () => Result }
 
 const calculate = (r: Result) => (): Result => {
@@ -49,6 +72,7 @@ const calculate = (r: Result) => (): Result => {
   return r
 }
 
+/** Create a timer. */
 const createTimer = (): Timer => {
   const result = Events.reduce((r, m) => {
     r.abs[m] = DEFAULT_TIME

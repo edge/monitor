@@ -1,19 +1,30 @@
+// Copyright (C) 2022 Edge Network Technologies Limited
+// Use of this source code is governed by a GNU GPL-style license
+// that can be found in the LICENSE.md file. All rights reserved.
+
 import * as client from 'prom-client'
 import { Event } from './timer'
 
+/** Group of metrics representing collective facets of any number of timed HTTP requests. */
 export type MetricGroup = Omit<Record<Event, client.Counter<string>>, 'start'> & {
   contentLength: client.Counter<string>
   requests: client.Counter<string>
 }
 
+/**
+ * Metrics 'context' object reflecting metrics recorded in this app.
+ * Simplifies access to the registry and various counters.
+ */
 export type Metrics = {
   register: client.Registry
   resource: MetricGroup
   type: MetricGroup
 }
 
+/** Global prefix for all metrics to disambiguate monitor data from that of other apps. */
 const Prefix = 'monitor_'
 
+/** Create a metrics context. */
 const createMetrics = (): Metrics => {
   const register = new client.Registry()
 
@@ -27,6 +38,7 @@ const createMetrics = (): Metrics => {
   }
 }
 
+/** Create a group of metrics, attaching each metric to a registry. */
 const createGroup = (register: client.Registry, pf: string, labelNames: string[]): MetricGroup => {
   const rest = { labelNames, registers: [register] }
 
