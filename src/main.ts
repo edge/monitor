@@ -79,14 +79,18 @@ const main = async () => {
   const rcv = updateMetrics(metrics)
 
   log.info('starting')
+  const [cancel, httpListen] = listen(metrics, log.extend('http'))
   try {
     await Promise.all([
       doRequests(rcv, log.extend('request')),
-      listen(metrics, log.extend('http'))
+      httpListen
     ])
   }
   catch (err) {
     log.error('critical error', { err })
+  }
+  finally {
+    cancel()
   }
 }
 
