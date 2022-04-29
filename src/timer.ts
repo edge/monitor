@@ -1,7 +1,7 @@
 /** Placeholder time value, to disambiguate unmeasured from measured values. */
 const DEFAULT_TIME = BigInt(-1)
-/** Relative to nanoseconds. `1e3` provides microsecond precision when calculating time elapsed */
-const SCALE = 1e3
+/** Relative to nanoseconds. `1e6` provides millisecond precision when calculating time elapsed */
+const SCALE = 1e6
 
 export type Event =
   'dns' |
