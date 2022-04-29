@@ -24,6 +24,7 @@ def deployScript() {
     --name $NAME \
     --restart always \
     --network core-network \
+    -v /data:$TARGETS_DATA_DIR \
     --expose $HTTP_PORT \
     --env DELAY=$DELAY \
     --env FREQUENCY=$FREQUENCY \
@@ -32,7 +33,7 @@ def deployScript() {
     --env LETSENCRYPT_EMAIL="adam@edge.network" \
     --env LETSENCRYPT_HOST=$LETSENCRYPT_HOST \
     --env LOG_LEVEL=$LOG_LEVEL \
-    --env TARGETS_DATA=$TARGETS_DATA \
+    --env TARGETS_FILE=/data/targets.yaml \
     --env VIRTUAL_HOST=$VIRTUAL_HOST \
     $IMAGE
   ''')
@@ -48,13 +49,19 @@ pipeline {
         script {
           def sshPort = env.SSH_PORT != null ? env.SSH_PORT : 22
           def ssh = "ssh -o ServerAliveInterval=120 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no -p ${sshPort} jenkins@${DEPLOY_TARGET} "
-          def filename = "deploy_${UUID.randomUUID().toString()}.sh"
+          def uuid = "${UUID.randomUUID().toString()}"
+          def filename = "deploy_${uuid}.sh"
+          def targetsData = b64e("$TARGETS_DATA")
+          def dataDir = "/$DATA_DIR/deploy_${uuid}"
           def script = deployScript()
 
           // Using a pre-authorized key, connect to the specified server and run the deploy script.
           sshagent(credentials : ['a687b920-fcb4-41e4-a878-5ae1f6850b26']) {
             println "> deploying ${IMAGE} ($NAME) to ${DEPLOY_TARGET}..."
-            sh "$ssh 'echo $script | base64 -d > ${filename} && \
+            // sh "$ssh 'echo $targetsData | base64 -d > $targetsFile"
+            sh "$ssh 'mkdir -p echo $dataDir && \
+              echo $targetsData | base64 -d > $dataDir/targets.yaml && \
+              echo $script | base64 -d > ${filename} && \
               chmod +x ${filename} && \
               NAME=$NAME \
               IMAGE=$IMAGE \
@@ -64,7 +71,7 @@ pipeline {
               HTTP_TOKEN=$HTTP_TOKEN \
               LETSENCRYPT_HOST=$DOMAIN \
               LOG_LEVEL=$LOG_LEVEL \
-              TARGETS_DATA=$TARGETS_DATA \
+              TARGETS_DATA_DIR=$dataDir \
               VIRTUAL_HOST=$DOMAIN \
                 bash -x ./${filename} && \
               rm ${filename}'"
