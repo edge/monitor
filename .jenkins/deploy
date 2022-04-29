@@ -24,7 +24,7 @@ def deployScript() {
     --name $NAME \
     --restart always \
     --network core-network \
-    -v /data:$TARGETS_DATA_DIR \
+    -v $TARGETS_DATA_DIR:/data \
     --expose $HTTP_PORT \
     --env DELAY=$DELAY \
     --env FREQUENCY=$FREQUENCY \
@@ -33,6 +33,7 @@ def deployScript() {
     --env LETSENCRYPT_EMAIL="adam@edge.network" \
     --env LETSENCRYPT_HOST=$LETSENCRYPT_HOST \
     --env LOG_LEVEL=$LOG_LEVEL \
+    --env NETWORK_ACCESS=$NETWORK_ACCESS \
     --env TARGETS_FILE=/data/targets.yaml \
     --env VIRTUAL_HOST=$VIRTUAL_HOST \
     $IMAGE
@@ -52,7 +53,7 @@ pipeline {
           def uuid = "${UUID.randomUUID().toString()}"
           def filename = "deploy_${uuid}.sh"
           def targetsData = b64e("$TARGETS_DATA")
-          def dataDir = "/$DATA_DIR/deploy_${uuid}"
+          def dataDir = "$DATA_DIR/deploy_${uuid}"
           def script = deployScript()
 
           // Using a pre-authorized key, connect to the specified server and run the deploy script.
@@ -71,6 +72,7 @@ pipeline {
               HTTP_TOKEN=$HTTP_TOKEN \
               LETSENCRYPT_HOST=$DOMAIN \
               LOG_LEVEL=$LOG_LEVEL \
+              NETWORK_ACCESS=$NETWORK_ACCESS \
               TARGETS_DATA_DIR=$dataDir \
               VIRTUAL_HOST=$DOMAIN \
                 bash -x ./${filename} && \
