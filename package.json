@@ -12,7 +12,8 @@
     "build": "tsc",
     "dev": "ts-node src/main.ts",
     "lint": "eslint --ext .ts src",
-    "lint:fix": "eslint --fix --ext .ts src"
+    "lint:fix": "eslint --fix --ext .ts src",
+    "start": "node out/src/main.js"
   },
   "devDependencies": {
     "@edge/eslint-config-typescript": "^0.1.4",
