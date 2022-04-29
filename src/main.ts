@@ -6,7 +6,7 @@ import { clearInterval, setInterval } from 'timers'
 import createMetrics, { Metrics } from './metrics'
 import request, { Response } from './request'
 
-const doRequests = async (metrics: Metrics, log?: Log): Promise<void> => {
+const doRequests = async (rcv: (r: Response) => void, log?: Log): Promise<void> => {
   const targets = await getTargets()
   const doRequest = request(log)
 
@@ -34,12 +34,8 @@ const doRequests = async (metrics: Metrics, log?: Log): Promise<void> => {
 
     log?.info('sending requests', { num: requests.length })
     const completed = await Promise.allSettled(requests.map(async r => {
-      const { headers, result } = await r()
-      const labels = [headers.contentType, headers.cache]
-      metrics.contentLength.labels(...labels).inc(parseInt(headers.contentLength))
-      metrics.download.labels(...labels).inc(result.delta.download)
-      metrics.requests.labels(...labels).inc()
-      metrics.ttfb.labels(...labels).inc(result.delta.ttfb)
+      const result = await r()
+      rcv(result)
     }))
     const errors = completed.filter(r => r.status === 'rejected')
     log?.info('completed requests', { num: completed.length - errors.length, errors: errors.length })
@@ -54,17 +50,38 @@ const doRequests = async (metrics: Metrics, log?: Log): Promise<void> => {
   tick()
 }
 
+const updateMetrics = (metrics: Metrics) => ({ target, headers, result }: Response) => {
+  const resourceLabels = [target.name || target.url, headers.cache]
+  metrics.resource.contentLength.labels(...resourceLabels).inc(parseInt(headers.contentLength))
+  metrics.resource.dns.labels(...resourceLabels).inc(result.delta.dns)
+  metrics.resource.download.labels(...resourceLabels).inc(result.delta.download)
+  metrics.resource.requests.labels(...resourceLabels).inc()
+  metrics.resource.ssl.labels(...resourceLabels).inc(result.delta.ssl)
+  metrics.resource.tcp.labels(...resourceLabels).inc(result.delta.tcp)
+  metrics.resource.ttfb.labels(...resourceLabels).inc(result.delta.ttfb)
+
+  const typeLabels = [headers.contentType.startsWith('image/') ? 'image' : 'other', headers.cache]
+  metrics.type.contentLength.labels(...typeLabels).inc(parseInt(headers.contentLength))
+  metrics.type.dns.labels(...typeLabels).inc(result.delta.dns)
+  metrics.type.download.labels(...typeLabels).inc(result.delta.download)
+  metrics.type.requests.labels(...typeLabels).inc()
+  metrics.type.ssl.labels(...typeLabels).inc(result.delta.ssl)
+  metrics.type.tcp.labels(...typeLabels).inc(result.delta.tcp)
+  metrics.type.ttfb.labels(...typeLabels).inc(result.delta.ttfb)
+}
+
 const main = async () => {
   const adaptors = [new StdioAdaptor()]
   const log = new Log(adaptors)
   log.setLogLevel(LogLevelFromString(config.log.level))
 
   const metrics = createMetrics()
+  const rcv = updateMetrics(metrics)
 
   log.info('starting')
   try {
     await Promise.all([
-      doRequests(metrics, log.extend('request')),
+      doRequests(rcv, log.extend('request')),
       listen(metrics, log.extend('http'))
     ])
   }
