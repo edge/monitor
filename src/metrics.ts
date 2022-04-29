@@ -31,12 +31,12 @@ const createGroup = (register: client.Registry, pf: string, labelNames: string[]
   const rest = { labelNames, registers: [register] }
 
   const contentLength = new client.Counter({ name: `${pf}content_length`, help: 'Content-Length of requests', ...rest })
-  const dns = new client.Counter({ name: `${pf}dns`, help: 'Time to resolve DNS (µs)', ...rest })
-  const download = new client.Counter({ name: `${pf}download`, help: 'Download time (µs)', ...rest })
+  const dns = new client.Counter({ name: `${pf}dns`, help: 'Time to resolve DNS', ...rest })
+  const download = new client.Counter({ name: `${pf}download`, help: 'Download time', ...rest })
   const requests = new client.Counter({ name: `${pf}requests`, help: 'Number of requests', ...rest })
-  const ssl = new client.Counter({ name: `${pf}ssl`, help: 'Time to establish SSL connection (µs)', ...rest })
-  const tcp = new client.Counter({ name: `${pf}tcp`, help: 'Time to establish TCP connection (µs)', ...rest })
-  const ttfb = new client.Counter({ name: `${pf}ttfb`, help: 'Time to first byte (µs)', ...rest })
+  const ssl = new client.Counter({ name: `${pf}ssl`, help: 'Time to establish SSL connection', ...rest })
+  const tcp = new client.Counter({ name: `${pf}tcp`, help: 'Time to establish TCP connection', ...rest })
+  const ttfb = new client.Counter({ name: `${pf}ttfb`, help: 'Time to first byte', ...rest })
 
   return { contentLength, dns, download, requests, ssl, tcp, ttfb }
 }
