@@ -1,3 +1,7 @@
+// Copyright (C) 2022 Edge Network Technologies Limited
+// Use of this source code is governed by a GNU GPL-style license
+// that can be found in the LICENSE.md file. All rights reserved.
+
 import config from './config'
 import getTargets from './targets'
 import listen from './api'
@@ -6,6 +10,18 @@ import { clearInterval, setInterval } from 'timers'
 import createMetrics, { Metrics } from './metrics'
 import request, { Response } from './request'
 
+/**
+ * Start a repeating request process.
+ * This reads targets from configuration, then sequentially performs HTTP GET requests to their URLs following a
+ * regular schedule.
+ * A cycle (tick) occurs every `FREQUENCY` seconds, and each request in a cycle is separated by `DELAY` milliseconds.
+ * The total number of cycles can be constrained to `STOP` - if this is 0 or unset, the cycle continues indefinitely.
+ *
+ * If any request in a given cycle is incomplete when the next cycle is scheduled to start, that cycle is skipped.
+ * In effect, while requests are individually asynchronous, cycles are synchronous, preventing any target being
+ * requested again when another request for it may be yet to complete.
+ * **This behaviour may change in future.**
+ */
 const doRequests = async (rcv: (r: Response) => void, log?: Log): Promise<void> => {
   const targets = await getTargets()
   const doRequest = request(log)
@@ -50,6 +66,7 @@ const doRequests = async (rcv: (r: Response) => void, log?: Log): Promise<void> 
   tick()
 }
 
+/** Update metrics from a timed response. */
 const updateMetrics = (metrics: Metrics) => ({ target, headers, result }: Response) => {
   const resourceLabels = [target.name || target.url, headers.cache]
   metrics.resource.contentLength.labels(...resourceLabels).inc(parseInt(headers.contentLength))

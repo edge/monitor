@@ -1,19 +1,33 @@
+// Copyright (C) 2022 Edge Network Technologies Limited
+// Use of this source code is governed by a GNU GPL-style license
+// that can be found in the LICENSE.md file. All rights reserved.
+
 import { Log } from '@edge/log'
 import { Target } from './targets'
 import http from 'http'
 import https from 'https'
 import createTimer, { Result } from './timer'
 
-const isSecureUrl = (url: string) => url.startsWith('https:')
-
+/**
+ * Headers recognized by this app.
+ * Some are used in metrics.
+ */
 export type Header = 'cache' | 'contentLength' | 'contentType'
 
+/**
+ * Response object containing a given target, response headers for the same, and a timings result for the
+ * HTTP request connecting the two.
+ */
 export type Response = {
-  target: Target
-  result: Result
   headers: Record<Header, string>
+  result: Result
+  target: Target
 }
 
+/** Check whether a URL is HTTPS. */
+const isSecureUrl = (url: string) => url.startsWith('https:')
+
+/** Perform, and time, an HTTP GET request to a specified target. */
 const request = (log?: Log) => (target: Target) => new Promise<Response>((resolve, reject) => {
   log?.debug('sending request', target)
   const proto = isSecureUrl(target.url) ? https : http
