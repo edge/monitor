@@ -3,19 +3,26 @@ import { Metrics } from './metrics'
 import config from './config'
 import http from 'http'
 
-const listen = async (metrics: Metrics, log?: Log) => new Promise((_, reject) => {
+const listen = (metrics: Metrics, log?: Log): [() => void, Promise<void>] => {
   const server = http.createServer()
+  const cancel = () => {
+    server.close()
+    log?.info('stopped listening')
+  }
+
   server.on('request', receive(metrics))
 
-  server.on('error', err => {
-    log?.error(err)
-    reject(err)
-  })
+  return [cancel, new Promise((_, reject) => {
+    server.on('error', err => {
+      log?.error(err)
+      reject(err)
+    })
 
-  server.listen(config.http.port, () => {
-    log?.info('listening', config.http)
-  })
-})
+    server.listen(config.http.port, () => {
+      log?.info('listening', config.http)
+    })
+  })]
+}
 
 const printMetrics = async (metrics: Metrics, res: http.ServerResponse) => {
   res.writeHead(200)
