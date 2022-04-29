@@ -3,6 +3,7 @@ import { parse } from 'yaml'
 import { readFile } from 'fs/promises'
 
 export type Target = {
+  name?: string
   url: string
 }
 
