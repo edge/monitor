@@ -6,8 +6,9 @@ import http from 'http'
 const listen = (metrics: Metrics, log?: Log): [() => void, Promise<void>] => {
   const server = http.createServer()
   const cancel = () => {
-    server.close()
-    log?.info('stopped listening')
+    server.close(() => {
+      log?.info('stopped')
+    })
   }
 
   server.on('request', receive(metrics))

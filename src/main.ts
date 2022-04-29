@@ -79,8 +79,10 @@ const main = async () => {
   const rcv = updateMetrics(metrics)
 
   log.info('starting')
-  const [cancel, httpListen] = listen(metrics, log.extend('http'))
+  let cancel: () => void = () => void 0
   try {
+    let httpListen: Promise<void>
+    [cancel, httpListen] = listen(metrics, log.extend('http'))
     await Promise.all([
       doRequests(rcv, log.extend('request')),
       httpListen
