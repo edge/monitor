@@ -37,9 +37,9 @@ const doRequests = async (metrics: Metrics, log?: Log): Promise<void> => {
       const { headers, result } = await r()
       const labels = [headers.contentType, headers.cache]
       metrics.contentLength.labels(...labels).inc(parseInt(headers.contentLength))
-      metrics.download.labels(...labels).inc(result.download - result.ttfb)
+      metrics.download.labels(...labels).inc(result.delta.download)
       metrics.requests.labels(...labels).inc()
-      metrics.ttfb.labels(...labels).inc(result.ttfb - result.start)
+      metrics.ttfb.labels(...labels).inc(result.delta.ttfb)
     }))
     const errors = completed.filter(r => r.status === 'rejected')
     log?.info('completed requests', { num: completed.length - errors.length, errors: errors.length })
