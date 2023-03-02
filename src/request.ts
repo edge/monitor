@@ -2,8 +2,8 @@
 // Use of this source code is governed by a GNU GPL-style license
 // that can be found in the LICENSE.md file. All rights reserved.
 
-import { Log } from '@edge/log'
-import { Target } from './targets'
+import { Context } from './main'
+import { Target } from './targets/types'
 import http from 'http'
 import https from 'https'
 import createTimer, { Result } from './timer'
@@ -28,8 +28,7 @@ export type Response = {
 const isSecureUrl = (url: string) => url.startsWith('https:')
 
 /** Perform, and time, an HTTP GET request to a specified target. */
-const request = (log?: Log) => (target: Target) => new Promise<Response>((resolve, reject) => {
-  log?.debug('sending request', target)
+const request = ({ log }: Context, target: Target) => new Promise<Response>((resolve, reject) => {
   const proto = isSecureUrl(target.url) ? https : http
   const timer = createTimer()
 
@@ -38,7 +37,7 @@ const request = (log?: Log) => (target: Target) => new Promise<Response>((resolv
   req.on('response', res => {
     res.once('readable', () => {
       timer.ttfb()
-      log?.debug('ttfb', target)
+      log.trace('ttfb', target)
     })
 
     res.on('readable', () => {
@@ -48,7 +47,7 @@ const request = (log?: Log) => (target: Target) => new Promise<Response>((resolv
     res.on('end', () => {
       timer.download()
       const result = timer.complete()
-      log?.debug('download', { target, delta: result.delta })
+      log.trace('download', { target, delta: result.delta })
       resolve({
         target,
         result,
@@ -64,20 +63,19 @@ const request = (log?: Log) => (target: Target) => new Promise<Response>((resolv
   req.on('socket', sock => {
     sock.on('lookup', () => {
       timer.dns()
-      log?.debug('dns', target)
+      log.trace('dns', target)
     })
     sock.on('connect', () => {
       timer.tcp()
-      log?.debug('connect', target)
+      log.trace('connect', target)
     })
     sock.on('secureConnect', () => {
       timer.ssl()
-      log?.debug('ssl', target)
+      log.trace('ssl', target)
     })
   })
 
   req.on('error', err => {
-    log?.error('error', { ...target, err })
     reject(err)
   })
 

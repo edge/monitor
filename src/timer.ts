@@ -73,7 +73,7 @@ const calculate = (r: Result) => (): Result => {
 }
 
 /** Create a timer. */
-const createTimer = (): Timer => {
+const timer = (): Timer => {
   const result = Events.reduce((r, m) => {
     r.abs[m] = DEFAULT_TIME
     r.delta[m] = 0
@@ -93,4 +93,4 @@ const createTimer = (): Timer => {
 
 const elapsed = (from: bigint, to: bigint): number => Math.round(Number(to - from) / SCALE)
 
-export default createTimer
+export default timer

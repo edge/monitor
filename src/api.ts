@@ -1,63 +1,48 @@
-// Copyright (C) 2022 Edge Network Technologies Limited
-// Use of this source code is governed by a GNU GPL-style license
-// that can be found in the LICENSE.md file. All rights reserved.
-
-import { Log } from '@edge/log'
-import { Metrics } from './metrics'
-import config from './config'
-import http from 'http'
+import * as targets from './targets/api'
+import { Context } from './main'
+import cors from 'cors'
+import express, { ErrorRequestHandler, RequestHandler, json } from 'express'
 
 /**
- * Start listening for HTTP requests.
- *
- * Returns a tuple of a cancel function and a Promise that rejects if the server encounters an error.
- * The Promise will not resolve.
+ * Final error handler.
+ * Logs any unhandled error and ensures the response is a safe 500 Internal Server Error, if not already sent.
  */
-const listen = (metrics: Metrics, log?: Log): [() => void, Promise<void>] => {
-  const server = http.createServer()
-  const cancel = () => {
-    server.close(() => {
-      log?.info('stopped')
-    })
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const finalError = (ctx: Context): ErrorRequestHandler => (err, req, res, next) => {
+  ctx.log.error(`${req.method} ${req.url}`, { err })
+  if (res.headersSent) return
+  res.status(500).json({ error: 'internal server error' })
+}
+
+/** Final handler for requests not matched. */
+const finalNotFound: RequestHandler = (req, res, next) => {
+  if (!res.headersSent) {
+    res.status(404).json({ error: 'no route' })
   }
-
-  server.on('request', receive(metrics))
-
-  return [cancel, new Promise((_, reject) => {
-    server.on('error', err => {
-      log?.error(err)
-      reject(err)
-    })
-
-    server.listen(config.http.port, () => {
-      log?.info('listening', config.http)
-    })
-  })]
+  next()
 }
 
-/** Print metrics to (and end) HTTP response. */
-const printMetrics = async (metrics: Metrics, res: http.ServerResponse) => {
-  res.writeHead(200)
-  res.end(await metrics.register.metrics())
+const metrics = (ctx: Context): RequestHandler => async (req, res, next) => {
+  const text = await ctx.metrics.register.metrics()
+  res.send(text)
+  next()
 }
 
-/** Receive and respond to an HTTP request. */
-const receive = (metrics: Metrics): http.RequestListener => (req, res) => {
-  if (config.http.token) {
-    const auth = req.headers.authorization
-    const token = auth && (auth.startsWith('Bearer ') || auth.startsWith('bearer ')) && auth.slice(7)
-    if (token !== config.http.token) return json(res, 403, { error: 'forbidden' })
-  }
+const api = (ctx: Context) => {
+  const app = express()
+  app.use(json())
+  app.use(cors())
 
-  if (req.url === '/') return printMetrics(metrics, res)
+  app.get('/api/metrics', metrics(ctx))
 
-  json(res, 404, { error: 'page not found' })
+  app.get('/api/targets', targets.getTargets(ctx))
+  app.put('/api/targets', targets.setTargets(ctx))
+
+  app.use(finalError(ctx))
+  app.use(express.static(ctx.config.public.path))
+  app.use(finalNotFound)
+
+  return app.listen(ctx.config.http.port)
 }
 
-/** Write JSON to (and end) HTTP response. */
-const json = (res: http.ServerResponse, code: number, data?: Record<string, unknown>) => {
-  res.writeHead(code, data && { 'Content-Type': 'application/json' })
-  res.end(data && JSON.stringify(data))
-}
-
-export default listen
+export default api
