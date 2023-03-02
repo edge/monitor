@@ -2,8 +2,53 @@
 <html>
   <head>
     <title>Edge Monitor</title>
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- superagent -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=WeakRef,BigInt"></script>
+    <script src="https://cdn.jsdelivr.net/npm/superagent"></script>
   </head>
   <body>
-    <h1>Edge Monitor</h1>
+    <header class="top">
+      <h1>Edge Monitor</h1>
+    </header>
+
+    <div class="app">
+      <!--
+        Targets
+      -->
+      <div class="section">
+        <header>
+          <h2>Targets</h2>
+        </header>
+        <div class="content">
+          <form id="targets">
+            {{ targets }}
+          </form>
+        </div>
+      </div>
+      <script>
+        Vue.createApp({
+          data() {
+            return {
+              targets: [],
+            }
+          },
+          methods: {
+            async refresh() {
+              const res = await superagent.get('/api/targets')
+              this.targets = res.body
+            },
+            async send() {
+              const res = await superagent.put('/api/targets').send(this.targets)
+              this.targets = res.body
+            }
+          },
+          mounted() {
+            this.refresh()
+          }
+        }).mount('#targets')
+      </script>
+    </div>
   </body>
 </html>
