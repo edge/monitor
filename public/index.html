@@ -2,11 +2,18 @@
 <html>
   <head>
     <title>Edge Monitor</title>
+    <link rel="stylesheet" href="/styles/main.css"/>
     <!-- Vue -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!--  Vuelidate -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-demi"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vuelidate/core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vuelidate/validators"></script>
     <!-- superagent -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=WeakRef,BigInt"></script>
     <script src="https://cdn.jsdelivr.net/npm/superagent"></script>
+    <!-- Local library -->
+    <script src="/scripts/cyrb53.js"></script>
   </head>
   <body>
     <header class="top">
@@ -18,12 +25,68 @@
         Targets
       -->
       <div class="section">
-        <header>
+        <header class="title">
           <h2>Targets</h2>
         </header>
-        <div class="content">
-          <form id="targets">
-            {{ targets }}
+        <div class="content" id="targets">
+          <form @submit.prevent="send">
+            <div class="actions">
+              <button type="submit">Save</button>
+            </div>
+            <ol>
+              <li v-for="(target, index) in hashTargets" :key="target.hash" class="item">
+                <div class="input">
+                  <label :for="`${target.hash}:enabled`">Enabled</label>
+                  <input
+                    :id="`${target.hash}:enabled`"
+                    type="checkbox"
+                    :checked="target.enabled !== false"
+                    @change="e => setEnabled(index, e)"
+                  />
+                </div>
+                <div class="input">
+                  <label :for="`${target.hash}:method`">Method</label>
+                  <select
+                    :id="`${target.hash}:method`"
+                    :value="target.method"
+                    @change="e => setMethod(index, e)"
+                  >
+                    <option value="DELETE">Delete</option>
+                    <option value="GET">Get</option>
+                    <option value="HEAD">Head</option>
+                    <option value="POST">Post</option>
+                    <option value="PUT">Put</option>
+                  </select>
+                </div>
+                <div class="input">
+                  <label :for="`${target.hash}:url`">URL</label>
+                  <input
+                    :id="`${target.hash}:url`"
+                    type="text"
+                    :value="target.url"
+                    @change="e => setURL(index, e)"
+                  />
+                </div>
+                <div class="input">
+                  <label :for="`${target.hash}:frequency`">Frequency</label>
+                  <input
+                    :id="`${target.hash}:frequency`"
+                    type="number"
+                    :value="target.frequency"
+                    @change="e => setFrequency(index, e)"
+                  />
+                </div>
+                <div class="input">
+                  <label :for="`${target.hash}:timeout`">Timeout</label>
+                  <input
+                    :id="`${target.hash}:timeout`"
+                    type="number"
+                    :value="target.timeout"
+                    @change="e => setTimeout(index, e)"
+                  />
+                </div>
+              </li>
+            </ol>
           </form>
         </div>
       </div>
@@ -34,7 +97,18 @@
               targets: [],
             }
           },
+          computed: {
+            hashTargets() {
+              return this.targets.map(target => {
+                const hash = this.hash(target)
+                return { ...target, hash }
+              })
+            }
+          },
           methods: {
+            hash(target) {
+              return cyrb53(JSON.stringify(target))
+            },
             async refresh() {
               const res = await superagent.get('/api/targets')
               this.targets = res.body
@@ -42,6 +116,23 @@
             async send() {
               const res = await superagent.put('/api/targets').send(this.targets)
               this.targets = res.body
+            },
+            setEnabled(i, e) {
+              this.targets[i].enabled = e.target.checked
+            },
+            setFrequency(i, e) {
+              const v = parseInt(e.target.value)
+              this.targets[i].frequency = v > 0 ? v : undefined
+            },
+            setMethod(i, e) {
+              this.targets[i].method = e.target.value
+            },
+            setTimeout(i, e) {
+              const v = parseInt(e.target.value)
+              this.targets[i].timeout = v > 0 ? v : undefined
+            },
+            setURL(i, e) {
+              this.targets[i].url = e.target.value
             }
           },
           mounted() {

@@ -38,7 +38,7 @@ const dispatcher = (ctx: Context) => {
       return
     }
 
-    const frequency = req.target.frequency || config.request.frequency
+    const frequency = (req.target.frequency || config.request.frequency) * 1000
     send(req)
     const iv = setInterval(() => send(req), frequency)
 

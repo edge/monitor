@@ -16,8 +16,8 @@ main({
     path: process.env.PUBLIC_PATH || 'public'
   },
   request: {
-    frequency: parseInt(process.env.REQUEST_FREQUENCY || '60000'),
-    timeout: parseInt(process.env.REQUEST_TIMEOUT || '30000')
+    frequency: parseInt(process.env.REQUEST_FREQUENCY || '60'),
+    timeout: parseInt(process.env.REQUEST_TIMEOUT || '30')
   },
   targets: {
     path: process.env.TARGETS_PATH || 'targets.json'

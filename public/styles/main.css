@@ -1,0 +1,59 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  margin: 0;
+}
+
+p, ol, ul,
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+ol, ul {
+  list-style: none;
+  padding: 0;
+}
+
+.top {
+  background: #000;
+  color: rgb(14,204,95);
+  padding: 0.5rem 1rem;
+}
+
+.top h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.app {
+  padding: 1rem;
+}
+
+.section .title {
+  border-bottom: 0.2rem #EDEDED solid;
+  padding-bottom: 0.2rem;
+}
+
+.section .title h2 {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.section form .actions {
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.5rem;
+}
+
+.section form .item {
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.5rem;
+}
+
+.section form .input {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
