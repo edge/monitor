@@ -1,5 +1,5 @@
 // https://stackoverflow.com/a/52171480
-function cyrb53(str, seed = 0) {
+export const cyrb53 = (str: string, seed = 0) => {
   let h1 = 0xdeadbeef ^ seed
   let h2 = 0x41c6ce57 ^ seed
   for (let ch, i = 0; i < str.length; i++) {
@@ -13,5 +13,3 @@ function cyrb53(str, seed = 0) {
 
   return 4294967296 * (2097151 & h2) + (h1 >>> 0)
 }
-// eslint-disable-next-line no-undef
-window.cyrb53 = cyrb53

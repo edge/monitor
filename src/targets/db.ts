@@ -1,5 +1,6 @@
 import { Context } from '../main'
 import { Target } from './types'
+import { cyrb53 } from '../lib'
 import { readFile, stat, writeFile } from 'fs/promises'
 
 export type TargetsModel = ReturnType<typeof model>
@@ -17,17 +18,12 @@ const validate = (obj: unknown): Target => {
   if (obj === null) throw new Error('may not be null')
   const tobj = obj as Record<string, unknown>
 
-  let enabled: boolean | undefined
-  if (typeof tobj.enabled === 'boolean') {
-    enabled = tobj.enabled
-  }
-  else if (tobj.enabled !== undefined) {
-    throw new Error('enabled must be Boolean')
-  }
+  if (typeof tobj.enabled !== 'boolean') throw new Error('enabled must be Boolean')
+  const enabled = tobj.enabled
 
   if (typeof tobj.url !== 'string') throw new Error('url must be a string')
   // @todo validate url
-  const url = tobj.url as string
+  const url = tobj.url
 
   if (typeof tobj.method !== 'string') throw new Error('method must be a string')
   if (!HTTP_METHOD.includes(tobj.method)) throw new Error(`method must be one of ${HTTP_METHOD.join(', ')}`)
@@ -49,25 +45,17 @@ const validate = (obj: unknown): Target => {
     throw new Error('headers must be an object')
   }
 
-  let frequency: number | undefined
-  if (typeof tobj.frequency === 'number') {
-    if (tobj.frequency < 0) throw new Error('frequency must be at least 0')
-    if (tobj.frequency > 0) frequency = tobj.frequency
-  }
-  else if (tobj.frequency !== undefined) {
-    throw new Error('frequency must be a number')
-  }
+  if (typeof tobj.frequency !== 'number') throw new Error('frequency must be a number')
+  if (tobj.frequency < 1) throw new Error('frequency must be at least 1')
+  const frequency = tobj.frequency
 
-  let timeout: number | undefined
-  if (typeof tobj.timeout === 'number') {
-    if (tobj.timeout < 0) throw new Error('timeout must be at least 0')
-    if (tobj.timeout > 0) timeout = tobj.timeout
-  }
-  else if (tobj.timeout !== undefined) {
-    throw new Error('timeout must be a number')
-  }
+  if (typeof tobj.timeout !== 'number') throw new Error('timeout must be a number')
+  if (tobj.timeout < 1) throw new Error('timeout must be at least 1')
+  const timeout = tobj.timeout
 
-  return { enabled, frequency, headers, method, timeout, url }
+  const hash = cyrb53(JSON.stringify({ method, url, headers })).toString()
+
+  return { enabled, frequency, hash, headers, method, timeout, url }
 }
 
 /**

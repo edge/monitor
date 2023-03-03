@@ -38,6 +38,8 @@ export const Events: Event[] = [
 
 /** Timing result created when a timer is completed. See `Timer.complete()` */
 export type Result = {
+  start: number
+  end: number
   abs: Record<Event, bigint>
   delta: Record<Event, number>
   total: Record<Event, number>
@@ -51,22 +53,19 @@ export type Result = {
  */
 export type Timer = Record<Event, () => void> & { complete: () => Result }
 
-const calculate = (r: Result) => (): Result => {
+const calculate = (r: Result): Result => {
+  if (r.abs.ssl < 0) r.abs.ssl = r.abs.tcp
+
   r.total.dns = elapsed(r.abs.start, r.abs.dns)
   r.total.tcp = elapsed(r.abs.start, r.abs.tcp)
-  if (r.abs.ssl) r.total.ssl = elapsed(r.abs.start, r.abs.ssl)
+  r.total.ssl = elapsed(r.abs.start, r.abs.ssl)
   r.total.ttfb = elapsed(r.abs.start, r.abs.ttfb)
   r.total.download = elapsed(r.abs.start, r.abs.download)
 
   r.delta.dns = elapsed(r.abs.start, r.abs.dns)
   r.delta.tcp = elapsed(r.abs.dns, r.abs.tcp)
-  if (r.abs.ssl) {
-    r.delta.ssl = elapsed(r.abs.tcp, r.abs.ssl)
-    r.delta.ttfb = elapsed(r.abs.ssl, r.abs.ttfb)
-  }
-  else {
-    r.delta.ttfb = elapsed(r.abs.tcp, r.abs.ttfb)
-  }
+  r.delta.ssl = elapsed(r.abs.tcp, r.abs.ssl)
+  r.delta.ttfb = elapsed(r.abs.ssl, r.abs.ttfb)
   r.delta.download = elapsed(r.abs.ttfb, r.abs.download)
 
   return r
@@ -79,9 +78,12 @@ const timer = (): Timer => {
     r.delta[m] = 0
     r.total[m] = 0
     return r
-  }, <Result>{ abs: {}, delta: {}, total: {} })
+  }, <Result>{ start: Date.now(), abs: {}, delta: {}, total: {} })
 
-  const complete = calculate(result)
+  const complete = () => {
+    result.end = Date.now()
+    return calculate(result)
+  }
 
   return Events.reduce((t, m) => {
     t[m] = () => {

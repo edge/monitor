@@ -1,4 +1,5 @@
 import { Context } from './main'
+import { Result } from './timer'
 import { Target } from './targets/types'
 import request from './request'
 
@@ -8,6 +9,7 @@ export type Dispatcher = ReturnType<typeof dispatcher>
 
 export type Request = {
   target: Target
+  lastResult?: Result | Error | undefined
   cancel?: CancelFunc | undefined
 }
 
@@ -19,14 +21,18 @@ const dispatcher = (ctx: Context) => {
   const pool: Request[] = []
   let started = false
 
+  const getPool = () => pool.map(req => req)
+
   const send = async (req: Request) => {
     log.debug('sending request', req.target)
     try {
       const res = await request(ctx, req.target)
       metrics.record(res)
+      req.lastResult = res.result
       log.info('request complete', req.target)
     }
     catch (err) {
+      req.lastResult = err as Error
       log.error('failed to send request', { ...req.target, err })
     }
   }
@@ -69,7 +75,7 @@ const dispatcher = (ctx: Context) => {
     log.info('reloaded')
   })
 
-  return { reload, start, stop }
+  return { getPool, reload, start, stop }
 }
 
 export default dispatcher

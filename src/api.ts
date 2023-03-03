@@ -10,6 +10,7 @@ const config = ({ config }: Context): RequestHandler => async (req, res, next) =
       timeout: config.request.timeout
     }
   })
+  next()
 }
 
 /**
@@ -48,6 +49,8 @@ const api = (ctx: Context) => {
 
   app.get('/api/targets', targets.getTargets(ctx))
   app.put('/api/targets', targets.setTargets(ctx))
+
+  app.get('/api/targets/status', targets.getStatus(ctx))
 
   app.use(finalError(ctx))
   app.use(express.static(ctx.config.public.path))
