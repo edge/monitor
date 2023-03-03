@@ -1,6 +1,6 @@
 body {
-  background-color: rgb(250,250,250);
-  color: rgb(29,29,29);
+  background-color: #fafafa;
+  color: #1d1d1d;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   margin: 0;
@@ -17,8 +17,8 @@ ol, ul {
 }
 
 .top {
-  background: rgb(29,29,29);
-  color: rgb(14,204,95);
+  background: #1d1d1d;
+  color: #0ecc5f;
   padding: 0.5rem 1rem;
 }
 
@@ -31,32 +31,56 @@ ol, ul {
   padding: 1rem;
 }
 
-.section .title {
-  border-bottom: 0.2rem rgb(220,220,220) solid;
-  padding-bottom: 0.2rem;
-}
-
 .section .title h2 {
   font-size: 1.2rem;
   font-weight: bold;
 }
 
+.section .content {
+  background: #fff;
+  border: 0;
+  border-radius: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 1rem;
+}
+
 .section form .actions {
   display: flex;
   flex-direction: row;
-  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.section form .actions button {
+  background: #fafafa;
+  border: 0.1rem solid #1d1d1d;
+  border-radius: 0.2rem;
+  color: #1d1d1d;
+  cursor: pointer;
+  margin-right: 1rem;
+  padding: 0.6rem 1rem;
+}
+
+.section form .actions button:hover {
+  border-color: #0ecc5f;
+  color: #0ecc5f;
 }
 
 .section form .item {
-  align-items: start;
+  background: #fff;
   display: flex;
   flex-direction: row;
   margin-top: 0.5rem;
 }
 
 .section form .input {
+  align-items: start;
   display: flex;
   flex-direction: column;
+  flex-grow: 0;
+}
+
+.section form .input.grow {
+  flex-grow: 1;
 }
 
 .section form .input:not(:first-child) {
@@ -76,7 +100,41 @@ ol, ul {
 .section form input[type="text"],
 .section form input[type="number"],
 .section form select {
-  background: #FFF;
-  border: 0.1rem solid rgb(220,220,220);
+  background: #fff;
+  border: 0.1rem solid #dcdcdc;
   border-radius: 0.2rem;
+  box-sizing: border-box;
+  padding: 0.2rem 0.4rem;
+  width: 100%;
+}
+
+.section form input[type="number"] {
+  max-width: 6rem;
+}
+
+.section form .item-actions {
+  display: flex;
+  flex-direction: row;
+}
+
+.section form .item-actions button {
+  background: none;
+  border: none;
+}
+
+.section form .item-actions button span {
+  display: none;
+}
+
+.section form .item-actions .icon {
+  width: 20px;
+}
+
+.section form .item-actions button:hover {
+  color: #0ecc5f;
+  cursor: pointer;
+}
+
+.section form .item-actions button:hover svg {
+  fill: #0ecc5f;
 }
