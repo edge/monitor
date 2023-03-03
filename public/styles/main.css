@@ -1,4 +1,6 @@
 body {
+  background-color: rgb(250,250,250);
+  color: rgb(29,29,29);
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   margin: 0;
@@ -15,7 +17,7 @@ ol, ul {
 }
 
 .top {
-  background: #000;
+  background: rgb(29,29,29);
   color: rgb(14,204,95);
   padding: 0.5rem 1rem;
 }
@@ -23,7 +25,6 @@ ol, ul {
 .top h1 {
   font-size: 1.5rem;
   font-weight: bold;
-  text-transform: uppercase;
 }
 
 .app {
@@ -31,7 +32,7 @@ ol, ul {
 }
 
 .section .title {
-  border-bottom: 0.2rem #EDEDED solid;
+  border-bottom: 0.2rem rgb(220,220,220) solid;
   padding-bottom: 0.2rem;
 }
 
@@ -47,6 +48,7 @@ ol, ul {
 }
 
 .section form .item {
+  align-items: start;
   display: flex;
   flex-direction: row;
   margin-top: 0.5rem;
@@ -55,5 +57,26 @@ ol, ul {
 .section form .input {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+}
+
+.section form .input:not(:first-child) {
+  padding-left: 0.2rem;
+}
+
+.section form .input:not(:last-child) {
+  padding-right: 0.2rem;
+}
+
+.section form label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+
+.section form input[type="text"],
+.section form input[type="number"],
+.section form select {
+  background: #FFF;
+  border: 0.1rem solid rgb(220,220,220);
+  border-radius: 0.2rem;
 }

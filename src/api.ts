@@ -3,6 +3,15 @@ import { Context } from './main'
 import cors from 'cors'
 import express, { ErrorRequestHandler, RequestHandler, json } from 'express'
 
+const config = ({ config }: Context): RequestHandler => async (req, res, next) => {
+  res.send({
+    request: {
+      frequency: config.request.frequency,
+      timeout: config.request.timeout
+    }
+  })
+}
+
 /**
  * Final error handler.
  * Logs any unhandled error and ensures the response is a safe 500 Internal Server Error, if not already sent.
@@ -32,6 +41,8 @@ const api = (ctx: Context) => {
   const app = express()
   app.use(json())
   app.use(cors())
+
+  app.get('/api/config', config(ctx))
 
   app.get('/api/metrics', metrics(ctx))
 

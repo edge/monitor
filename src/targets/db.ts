@@ -51,8 +51,8 @@ const validate = (obj: unknown): Target => {
 
   let frequency: number | undefined
   if (typeof tobj.frequency === 'number') {
-    if (tobj.frequency < 1) throw new Error('frequency must be at least 1')
-    frequency = tobj.frequency
+    if (tobj.frequency < 0) throw new Error('frequency must be at least 0')
+    if (tobj.frequency > 0) frequency = tobj.frequency
   }
   else if (tobj.frequency !== undefined) {
     throw new Error('frequency must be a number')
@@ -60,8 +60,8 @@ const validate = (obj: unknown): Target => {
 
   let timeout: number | undefined
   if (typeof tobj.timeout === 'number') {
-    if (tobj.timeout < 1) throw new Error('timeout must be at least 1')
-    timeout = tobj.timeout
+    if (tobj.timeout < 0) throw new Error('timeout must be at least 0')
+    if (tobj.timeout > 0) timeout = tobj.timeout
   }
   else if (tobj.timeout !== undefined) {
     throw new Error('timeout must be a number')

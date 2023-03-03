@@ -32,10 +32,11 @@
           <form @submit.prevent="send">
             <div class="actions">
               <button type="submit">Save</button>
+              <button type="button" @click.prevent="append">Append</button>
             </div>
             <ol>
               <li v-for="(target, index) in hashTargets" :key="target.hash" class="item">
-                <div class="input">
+                <div class="input enabled">
                   <label :for="`${target.hash}:enabled`">Enabled</label>
                   <input
                     :id="`${target.hash}:enabled`"
@@ -44,7 +45,7 @@
                     @change="e => setEnabled(index, e)"
                   />
                 </div>
-                <div class="input">
+                <div class="input select method">
                   <label :for="`${target.hash}:method`">Method</label>
                   <select
                     :id="`${target.hash}:method`"
@@ -58,7 +59,7 @@
                     <option value="PUT">Put</option>
                   </select>
                 </div>
-                <div class="input">
+                <div class="input url">
                   <label :for="`${target.hash}:url`">URL</label>
                   <input
                     :id="`${target.hash}:url`"
@@ -67,23 +68,31 @@
                     @change="e => setURL(index, e)"
                   />
                 </div>
-                <div class="input">
+                <div class="input frequency">
                   <label :for="`${target.hash}:frequency`">Frequency</label>
                   <input
                     :id="`${target.hash}:frequency`"
                     type="number"
+                    min="0"
                     :value="target.frequency"
                     @change="e => setFrequency(index, e)"
                   />
                 </div>
-                <div class="input">
+                <div class="input timeout">
                   <label :for="`${target.hash}:timeout`">Timeout</label>
                   <input
                     :id="`${target.hash}:timeout`"
                     type="number"
+                    min="0"
                     :value="target.timeout"
                     @change="e => setTimeout(index, e)"
                   />
+                </div>
+                <div class="item-actions">
+                  <button class="delete" @click.prevent="e => remove(index, e)">Delete</button>
+                  <button class="duplicate" @click.prevent="e => duplicate(index, e)">Duplicate</button>
+                  <button class="move-up" @click.prevent="e => move(index, index-1, e)">Move up</button>
+                  <button class="move-down" @click.prevent="e => move(index, index+1, e)">Move down</button>
                 </div>
               </li>
             </ol>
@@ -94,6 +103,7 @@
         Vue.createApp({
           data() {
             return {
+              config: {},
               targets: [],
             }
           },
@@ -106,12 +116,62 @@
             }
           },
           methods: {
+            append(e) {
+              const targets = this.targets.map(t => t)
+              targets.push({
+                enabled: true,
+                frequency: this.config.request.frequency,
+                method: 'GET',
+                timeout: this.config.request.timeout
+              })
+              this.targets = targets
+            },
+            duplicate(i, e) {
+              const targets = this.targets.slice(0, i+1)
+              const src = this.targets[i]
+              targets.push({
+                enabled: src.enabled,
+                frequency: src.frequency,
+                method: src.method,
+                timeout: src.timeout,
+                url: src.url
+              })
+              targets.push(...this.targets.slice(i+1))
+              this.targets = targets
+            },
             hash(target) {
               return cyrb53(JSON.stringify(target))
+            },
+            move(i, dest, e) {
+              if (i < dest) {
+                const targets = this.targets.slice(0, i)
+                targets.push(...this.targets.slice(i+1, dest+1))
+                targets.push(this.targets[i])
+                targets.push(...this.targets.slice(dest+1))
+                this.targets = targets
+              }
+              else if (i > dest) {
+                const targets = this.targets.slice(0, dest)
+                targets.push(this.targets[i])
+                targets.push(...this.targets.slice(dest, i))
+                targets.push(...this.targets.slice(i+1))
+                this.targets = targets
+              }
             },
             async refresh() {
               const res = await superagent.get('/api/targets')
               this.targets = res.body
+            },
+            async refreshConfig() {
+              const res = await superagent.get('/api/config')
+              this.config = res.body
+            },
+            remove(i, e) {
+              const targets = [
+                ...this.targets.slice(0, i),
+                ...this.targets.slice(i+1)
+              ]
+              this.targets = targets
             },
             async send() {
               const res = await superagent.put('/api/targets').send(this.targets)
@@ -121,22 +181,21 @@
               this.targets[i].enabled = e.target.checked
             },
             setFrequency(i, e) {
-              const v = parseInt(e.target.value)
-              this.targets[i].frequency = v > 0 ? v : undefined
+              this.targets[i].frequency = parseInt(e.target.value) || 0
             },
             setMethod(i, e) {
               this.targets[i].method = e.target.value
             },
             setTimeout(i, e) {
-              const v = parseInt(e.target.value)
-              this.targets[i].timeout = v > 0 ? v : undefined
+              this.targets[i].timeout = parseInt(e.target.value) || 0
             },
             setURL(i, e) {
               this.targets[i].url = e.target.value
             }
           },
-          mounted() {
-            this.refresh()
+          async mounted() {
+            await this.refreshConfig()
+            await this.refresh()
           }
         }).mount('#targets')
       </script>
