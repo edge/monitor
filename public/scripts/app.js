@@ -231,7 +231,7 @@ const app = Vue.createApp({
     await this.refreshConfig()
     await this.refresh()
     await this.refreshStatus()
-    setInterval(() => this.redraw(), 1000)
+    // setInterval(() => this.redraw(), 1000)
   }
 })
 
