@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Edge Monitor</title>
+    <link rel="stylesheet" href="/styles/main.css"/>
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- superagent -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=WeakRef,BigInt"></script>
+    <script src="https://cdn.jsdelivr.net/npm/superagent"></script>
+  </head>
+  <body>
+    <header class="top">
+      <h1>Edge Monitor</h1>
+    </header>
+
+    <div class="app">
+      <!--
+        Targets
+      -->
+      <div class="section">
+        <header class="title">
+          <h2>Targets</h2>
+        </header>
+        <div class="content" id="targets">
+          <form @submit.prevent="send">
+            <div class="actions">
+              <button type="submit">Save</button>
+              <button type="button" @click.prevent="append">Append</button>
+              <button type="button" @click.prevent="refreshStatus">Refresh status</button>
+            </div>
+            <table>
+              <thead>
+                <th class="enabled">Enabled</th>
+                <th class="method">Method</th>
+                <th class="url">URL</th>
+                <th class="frequency">Frequency</th>
+                <th class="timeout">Timeout</th>
+                <th class="status">Status</th>
+                <th class="last"><abbr title="Last request time">LRT</abbr></th>
+                <th class="rtt"><abbr title="Round-trip time">RTT</abbr></th>
+                <th class="item-actions">Actions</th>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(target, index) in targets"
+                  :key="target.hash"
+                  :class="['item', target.enabled ? 'enabled' : 'disabled']"
+                >
+                  <td class="input enabled">
+                    <input
+                      type="checkbox"
+                      :checked="target.enabled !== false"
+                      @change="e => setEnabled(index, e)"
+                    />
+                  </td>
+                  <td class="input select method">
+                    <select
+                      :value="target.method"
+                      @change="e => setMethod(index, e)"
+                    >
+                      <option value="DELETE">Delete</option>
+                      <option value="GET">Get</option>
+                      <option value="HEAD">Head</option>
+                      <option value="POST">Post</option>
+                      <option value="PUT">Put</option>
+                    </select>
+                  </td>
+                  <td class="input url grow">
+                    <input
+                      type="text"
+                      :value="target.url"
+                      @change="e => setURL(index, e)"
+                    />
+                  </td>
+                  <td class="input frequency">
+                    <input
+                      type="number"
+                      min="0"
+                      :value="target.frequency"
+                      @change="e => setFrequency(index, e)"
+                    />
+                  </td>
+                  <td class="input timeout">
+                    <input
+                      type="number"
+                      min="0"
+                      :value="target.timeout"
+                      @change="e => setTimeout(index, e)"
+                    />
+                  </td>
+
+                  <td class="status disabled" v-if="target.enabled === false"></td>
+                  <td class="status ok" v-else-if="hasStatus(target)">OK</td>
+                  <td class="status error" v-else-if="hasError(target)">
+                    <abbr :title="getError(target)">Error</abbr>
+                  </td>
+                  <td class="status unknown" v-else>TBC</td>
+
+                  <td class="last" v-if="target.enabled && hasStatus(target)">
+                    <abbr :title="getLastRequestTime(target)">{{getLastRequestAge(target)}}</abbr>
+                  </td>
+                  <td class="last" v-else></td>
+
+                  <td class="rtt" v-if="target.enabled && hasStatus(target)">{{getLastRequestDuration(target)}}</td>
+                  <td class="rtt" v-else></td>
+
+                  <td class="item-actions">
+                    <button title="Delete" class="delete" @click.prevent="e => remove(index, e)">
+                      <span>Delete</span>
+                      <icon-trash/>
+                    </button>
+                    <button title="Duplicate" class="duplicate" @click.prevent="e => duplicate(index, e)">
+                      <span>Duplicate</span>
+                      <icon-duplicate/>
+                    </button>
+                    <button title="Move up" class="move-up" @click.prevent="e => move(index, index-1, e)">
+                      <span>Move up</span>
+                      <icon-arrow-up/>
+                    </button>
+                    <button title="Move down" class="move-down" @click.prevent="e => move(index, index+1, e)">
+                      <span>Move down</span>
+                      <icon-arrow-down/>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </form>
+        </div>
+      </div>
+      <script src="./scripts/app.js"></script>
+    </div>
+  </body>
+</html>
