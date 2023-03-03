@@ -155,6 +155,7 @@ const app = Vue.createApp({
       return this.status[target.hash] !== undefined
     },
     move(i, dest) {
+      if (dest < 0 || dest > this.targets.length) return
       if (i < dest) {
         const targets = this.targets.slice(0, i)
         targets.push(...this.targets.slice(i+1, dest+1))
