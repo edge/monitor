@@ -1,6 +1,6 @@
 {
   "name": "@edge/monitor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Performance monitoring tool for the Edge network",
   "private": true,
   "license": "SEE LICENSE IN LICENSE.md",
