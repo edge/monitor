@@ -24,18 +24,14 @@ def deployScript() {
     --name $NAME \
     --restart always \
     --network core-network \
-    -v $TARGETS_DATA_DIR:/data \
     --expose $HTTP_PORT \
-    --env DELAY=$DELAY \
-    --env FREQUENCY=$FREQUENCY \
     --env HTTP_PORT=$HTTP_PORT \
-    --env HTTP_TOKEN=$HTTP_TOKEN \
     --env LETSENCRYPT_EMAIL="adam@edge.network" \
     --env LETSENCRYPT_HOST=$LETSENCRYPT_HOST \
     --env LOG_LEVEL=$LOG_LEVEL \
     --env NETWORK_ACCESS=$NETWORK_ACCESS \
-    --env TARGETS_FILE=/data/targets.yaml \
     --env VIRTUAL_HOST=$VIRTUAL_HOST \
+    --volume $NAME-data:/data \
     $IMAGE
   ''')
 }
@@ -66,14 +62,10 @@ pipeline {
               chmod +x ${filename} && \
               NAME=$NAME \
               IMAGE=$IMAGE \
-              DELAY=$DELAY \
-              FREQUENCY=$FREQUENCY \
               HTTP_PORT=$HTTP_PORT \
-              HTTP_TOKEN=$HTTP_TOKEN \
               LETSENCRYPT_HOST=$DOMAIN \
               LOG_LEVEL=$LOG_LEVEL \
               NETWORK_ACCESS=$NETWORK_ACCESS \
-              TARGETS_DATA_DIR=$dataDir \
               VIRTUAL_HOST=$DOMAIN \
                 bash -x ./${filename} && \
               rm ${filename}'"

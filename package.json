@@ -14,7 +14,7 @@
     "dev:watch": "nodemon --watch src -e ts --exec 'npm run dev'",
     "lint": "eslint --ext .ts src",
     "lint:fix": "eslint --fix --ext .ts src",
-    "start": "node out/src/main.js"
+    "start": "node out/src/index.js"
   },
   "devDependencies": {
     "@edge/eslint-config-typescript": "^0.1.4",
