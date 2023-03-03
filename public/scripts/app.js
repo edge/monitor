@@ -1,4 +1,6 @@
 /* global Vue */
+/* global setInterval */
+/* global setTimeout */
 /* global superagent */
 
 //
@@ -124,6 +126,14 @@ const app = Vue.createApp({
       if (this.hasError(target)) return this.status[target.hash].error
       return ''
     },
+    getLastRequestAge(target) {
+      if (this.hasStatus(target)) {
+        const diff = Date.now() - this.status[target.hash].start
+        const secs = Math.round(diff/1000)
+        return `${secs}s ago`
+      }
+      return ''
+    },
     getLastRequestDuration(target) {
       if (this.hasStatus(target)) {
         return `${this.status[target.hash].total.download}ms`
@@ -132,11 +142,9 @@ const app = Vue.createApp({
     },
     getLastRequestTime(target) {
       if (this.hasStatus(target)) {
-        const diff = Date.now() - this.status[target.hash].start
-        const secs = Math.round(diff/1000)
-        return `${secs}s ago`
+        const d = new Date(this.status[target.hash].start)
+        return d.toISOString()
       }
-      return ''
     },
     hasError(target) {
       if (this.status[target.hash] === undefined) return false
@@ -162,6 +170,22 @@ const app = Vue.createApp({
         this.targets = targets
       }
     },
+    async redraw() {
+      this.$forceUpdate()
+      let mustRefresh = false
+      for (const target of this.targets) {
+        if (target.enabled === false) continue
+        if (!this.hasStatus(target)) continue
+        const diff = Math.round((Date.now() - this.status[target.hash].start)/1000)
+        if (diff > target.frequency) {
+          mustRefresh = true
+          break
+        }
+      }
+      if (mustRefresh) {
+        return await this.refreshStatus()
+      }
+    },
     async refresh() {
       const res = await superagent.get('/api/targets')
       this.targets = res.body
@@ -184,6 +208,7 @@ const app = Vue.createApp({
     async send() {
       const res = await superagent.put('/api/targets').send(this.targets)
       this.targets = res.body
+      setTimeout(() => this.refreshStatus(), 500)
     },
     setEnabled(i, e) {
       this.targets[i].enabled = e.target.checked
@@ -205,6 +230,7 @@ const app = Vue.createApp({
     await this.refreshConfig()
     await this.refresh()
     await this.refreshStatus()
+    setInterval(() => this.redraw(), 1000)
   }
 })
 

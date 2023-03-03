@@ -44,13 +44,13 @@ ol, ul {
   padding: 1rem;
 }
 
-.section form .actions {
+form .actions {
   display: flex;
   flex-direction: row;
   margin-bottom: 1rem;
 }
 
-.section form .actions button {
+form .actions button {
   background: #fafafa;
   border: 0.1rem solid #1d1d1d;
   border-radius: 0.2rem;
@@ -60,46 +60,49 @@ ol, ul {
   padding: 0.6rem 1rem;
 }
 
-.section form .actions button:hover {
+form .actions button:hover {
   border-color: #0ecc5f;
   color: #0ecc5f;
 }
 
-.section form .item {
-  background: #fff;
-  display: flex;
-  flex-direction: row;
-  margin-top: 0.5rem;
+table {
+  border-collapse: collapse;
+  width: 100%;
 }
 
-.section form .input {
-  align-items: start;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 0;
+table th,
+table td {
+  margin: 0;
 }
 
-.section form .input.grow {
-  flex-grow: 1;
-}
-
-.section form .input:not(:first-child) {
-  padding-left: 0.2rem;
-}
-
-.section form .input:not(:last-child) {
-  padding-right: 0.2rem;
-}
-
-.section form label {
+table th {
   font-size: 0.8rem;
-  font-weight: bold;
+  text-align: left;
+}
+
+table td {
+  padding: 0.4rem 0.2rem;
+}
+
+table tr {
   margin-bottom: 0.2rem;
 }
 
-.section form input[type="text"],
-.section form input[type="number"],
-.section form select {
+table tr td:first-child {
+  border-radius: 0.2rem 0 0 0.2rem;
+}
+
+table tr td:last-child {
+  border-radius: 0 0.2rem 0.2rem 0;
+}
+
+table tr.disabled td {
+  background: #dcdcdc;
+}
+
+form input[type="text"],
+form input[type="number"],
+form select {
   background: #fff;
   border: 0.1rem solid #dcdcdc;
   border-radius: 0.2rem;
@@ -108,33 +111,33 @@ ol, ul {
   width: 100%;
 }
 
-.section form input[type="number"] {
+form input[type="number"] {
   max-width: 6rem;
 }
 
-.section form .item-actions {
+form .item-actions {
   display: flex;
   flex-direction: row;
 }
 
-.section form .item-actions button {
+form .item-actions button {
   background: none;
   border: none;
 }
 
-.section form .item-actions button span {
+form .item-actions button span {
   display: none;
 }
 
-.section form .item-actions .icon {
+form .item-actions .icon {
   width: 20px;
 }
 
-.section form .item-actions button:hover {
+form .item-actions button:hover {
   color: #0ecc5f;
   cursor: pointer;
 }
 
-.section form .item-actions button:hover svg {
+form .item-actions button:hover svg {
   fill: #0ecc5f;
 }
