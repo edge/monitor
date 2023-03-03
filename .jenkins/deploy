@@ -48,17 +48,12 @@ pipeline {
           def ssh = "ssh -o ServerAliveInterval=120 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no -p ${sshPort} jenkins@${DEPLOY_TARGET} "
           def uuid = "${UUID.randomUUID().toString()}"
           def filename = "deploy_${uuid}.sh"
-          def targetsData = b64e("$TARGETS_DATA")
-          def dataDir = "$DATA_DIR/deploy_${uuid}"
           def script = deployScript()
 
           // Using a pre-authorized key, connect to the specified server and run the deploy script.
           sshagent(credentials : ['a687b920-fcb4-41e4-a878-5ae1f6850b26']) {
             println "> deploying ${IMAGE} ($NAME) to ${DEPLOY_TARGET}..."
-            // sh "$ssh 'echo $targetsData | base64 -d > $targetsFile"
-            sh "$ssh 'mkdir -p echo $dataDir && \
-              echo $targetsData | base64 -d > $dataDir/targets.yaml && \
-              echo $script | base64 -d > ${filename} && \
+            sh "echo $script | base64 -d > ${filename} && \
               chmod +x ${filename} && \
               NAME=$NAME \
               IMAGE=$IMAGE \
