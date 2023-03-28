@@ -89,7 +89,10 @@ const app = Vue.createApp({
     return {
       config: {},
       status: {},
-      targets: []
+      targets: [],
+
+      autoRefresh: false,
+      iAutoRefresh: null
     }
   },
   components: {
@@ -225,13 +228,23 @@ const app = Vue.createApp({
     },
     setURL(i, e) {
       this.targets[i].url = e.target.value
+    },
+    toggleAutoRefresh() {
+      if (this.autoRefresh) {
+        this.autoRefresh = false
+        // eslint-disable-next-line no-undef
+        clearInterval(this.iAutoRefresh)
+      }
+      else {
+        this.autoRefresh = true
+        this.iAutoRefresh = setInterval(() => this.redraw(), 1000)
+      }
     }
   },
   async mounted() {
     await this.refreshConfig()
     await this.refresh()
     await this.refreshStatus()
-    // setInterval(() => this.redraw(), 1000)
   }
 })
 
