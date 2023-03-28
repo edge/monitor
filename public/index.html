@@ -28,6 +28,10 @@
               <button type="submit">Save</button>
               <button type="button" @click.prevent="append">Append</button>
               <button type="button" @click.prevent="refreshStatus">Refresh status</button>
+              <button type="button" @click.prevent="toggleAutoRefresh">
+                <span v-if="autoRefresh">Auto-refresh <strong>on</strong></span>
+                <span v-else>Auto-refresh <strong>off</strong></span>
+              </button>
             </div>
             <table>
               <thead>
